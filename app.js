@@ -59,14 +59,14 @@ class BadgeDemo {
         this.loadingIndicator.style.display = 'inline';
         
         // Start countdown
-        this.startCountdown(30);
-        
-        // Set the timeout for 30 seconds
+        this.startCountdown(10);
+
+        // Set the timeout for 10 seconds
         this.timeoutId = setTimeout(() => {
             this.setBadge();
-        }, 30000);
-        
-        this.updateStatus('⏱️ Timer started! Badge will be set in 30 seconds...', 'info');
+        }, 10000);
+
+        this.updateStatus('⏱️ Timer started! Badge will be set in 10 seconds...', 'info');
     }
     
     startCountdown(seconds) {
@@ -80,7 +80,7 @@ class BadgeDemo {
                 setTimeout(updateCountdown, 1000);
             } else {
                 const buttonText = this.setBadgeBtn.querySelector('.button-text');
-                buttonText.textContent = 'Set Badge (30s delay)';
+                buttonText.textContent = 'Set Badge (10s delay)';
             }
         };
         
@@ -100,7 +100,7 @@ class BadgeDemo {
             
             // Reset button text
             const buttonText = this.setBadgeBtn.querySelector('.button-text');
-            buttonText.textContent = 'Set Badge (30s delay)';
+            buttonText.textContent = 'Set Badge (10s delay)';
             
         } catch (error) {
             console.error('Failed to set badge:', error);
@@ -112,7 +112,7 @@ class BadgeDemo {
             
             // Reset button text
             const buttonText = this.setBadgeBtn.querySelector('.button-text');
-            buttonText.textContent = 'Set Badge (30s delay)';
+            buttonText.textContent = 'Set Badge (10s delay)';
         }
     }
     
@@ -129,7 +129,7 @@ class BadgeDemo {
                 
                 // Reset button text
                 const buttonText = this.setBadgeBtn.querySelector('.button-text');
-                buttonText.textContent = 'Set Badge (30s delay)';
+                buttonText.textContent = 'Set Badge (10s delay)';
             }
             
             // Clear the badge
