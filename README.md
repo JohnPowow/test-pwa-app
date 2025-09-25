@@ -1,4 +1,6 @@
-# 🐱 Test PWA - App Badge Demo
+# 🐱 T- ✅ Full PWA functionality (installable, offline-capable)
+- 🔔 App Badge API demonstration with 10-second delay
+- 🎯 Modern, responsive design with cat emoji branding PWA - App Badge Demo
 
 A Progressive Web App (PWA) that demonstrates the `setAppBadge` API functionality with a 10-second delay. Features a cute cat emoji theme!
 

@@ -1,10 +1,10 @@
-const CACHE_NAME = 'test-pwa-v1';
+const CACHE_NAME = 'test-pwa-v3'; // Updated version to force refresh
 const urlsToCache = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/app.js',
-    '/manifest.json'
+    './',
+    './index.html',
+    './style.css',
+    './app.js',
+    './manifest.json'
 ];
 
 // Install event - cache resources
@@ -18,30 +18,17 @@ self.addEventListener('install', (event) => {
             })
             .then(() => {
                 console.log('Service Worker: All files cached');
+                // Force immediate activation
                 return self.skipWaiting();
+            })
+            .catch((error) => {
+                console.error('Service Worker: Cache failed', error);
+                throw error;
             })
     );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker: Activate event');
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Service Worker: Deleting old cache', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => {
-            console.log('Service Worker: Claiming clients');
-            return self.clients.claim();
-        })
-    );
-});
+// NOTE: Enhanced activate event handler is at the bottom of the file
 
 // Fetch event - serve cached content when offline
 self.addEventListener('fetch', (event) => {
@@ -118,23 +105,20 @@ class BackgroundBadgeManager {
     }
 }
 
+// Simulate checking for updates
+async function checkForUpdates() {
+    // In a real app, this might check an API, IndexedDB, or other data source
+    const random = Math.random();
+    console.log('Service Worker: Checking for updates...', random);
+    
+    // Simulate 70% chance of having updates
+    return random > 0.3;
+}
+
 // Global badge manager instance
 const badgeManager = new BackgroundBadgeManager();
 
-// Handle background sync for badge updates
-self.addEventListener('sync', (event) => {
-    console.log('Service Worker: Background sync event:', event.tag);
-    
-    if (event.tag === 'background-badge-sync') {
-        event.waitUntil(
-            handleBackgroundBadgeSync()
-        );
-    } else if (event.tag === 'periodic-badge-update') {
-        event.waitUntil(
-            handlePeriodicBadgeUpdate()
-        );
-    }
-});
+// NOTE: Enhanced sync handler is below with keep-alive functionality
 
 // Background badge sync handler
 async function handleBackgroundBadgeSync() {
@@ -192,16 +176,6 @@ async function handlePeriodicBadgeUpdate() {
         console.error('Service Worker: Periodic badge update failed:', error);
         return false;
     }
-}
-
-// Simulate checking for updates
-async function checkForUpdates() {
-    // In a real app, this might check an API, IndexedDB, or other data source
-    const random = Math.random();
-    console.log('Service Worker: Checking for updates...', random);
-    
-    // Simulate 70% chance of having updates
-    return random > 0.3;
 }
 
 // Handle push notifications for badge updates
@@ -284,8 +258,8 @@ async function handleNotificationClick(data) {
             // Focus existing window
             await clients[0].focus();
         } else {
-            // Open new window
-            await self.clients.openWindow('/');
+            // Open new window with correct path for GitHub Pages
+            await self.clients.openWindow('./');
         }
         
         // Optionally clear badge when notification is clicked
@@ -301,7 +275,173 @@ async function handleNotificationClick(data) {
     }
 }
 
-// Keep service worker alive with periodic tasks
+// NOTE: Enhanced message handler is below with additional functionality
+
+// Periodic background task to keep service worker active
+let keepAliveInterval;
+
+self.addEventListener('activate', (event) => {
+    console.log('Service Worker: Activate event');
+    
+    event.waitUntil(
+        Promise.all([
+            // Clean up old caches
+            caches.keys().then((cacheNames) => {
+                return Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheName !== CACHE_NAME) {
+                            console.log('Service Worker: Deleting old cache', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            }),
+            // Claim all clients immediately
+            self.clients.claim()
+        ]).then(() => {
+            console.log('Service Worker: Activated and claiming clients');
+            
+            // Start keep-alive mechanism
+            startKeepAlive();
+            
+            // Start periodic background badge updates to ensure persistence
+            startPeriodicBadgeUpdates();
+            
+            // Notify clients that SW is ready
+            return self.clients.matchAll().then(clients => {
+                clients.forEach(client => {
+                    client.postMessage({
+                        type: 'SW_ACTIVATED',
+                        message: 'Service Worker activated and ready'
+                    });
+                });
+            });
+        }).catch(error => {
+            console.error('Service Worker: Activation failed', error);
+        })
+    );
+});
+
+// Keep service worker alive with enhanced persistence
+function startKeepAlive() {
+    if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+    }
+    
+    keepAliveInterval = setInterval(() => {
+        console.log('Service Worker: Keep alive ping');
+        
+        // Perform badge operations to keep SW active
+        if (Math.random() > 0.8) { // 20% chance
+            console.log('Service Worker: Performing background badge check');
+            checkForUpdates().then(shouldUpdate => {
+                if (shouldUpdate) {
+                    badgeManager.incrementBadge();
+                }
+            }).catch(err => {
+                console.log('Background check error:', err);
+            });
+        }
+        
+        // Register periodic sync to ensure background capability
+        if (self.registration && self.registration.sync) {
+            self.registration.sync.register('keep-alive-sync').catch(err => {
+                console.log('Keep-alive sync registration failed:', err);
+            });
+        }
+    }, 20000); // Every 20 seconds (well before 30s timeout)
+}
+
+// Enhanced background sync for keep-alive
+self.addEventListener('sync', (event) => {
+    console.log('Service Worker: Background sync event:', event.tag);
+    
+    if (event.tag === 'background-badge-sync') {
+        event.waitUntil(handleBackgroundBadgeSync());
+    } else if (event.tag === 'periodic-badge-update') {
+        event.waitUntil(handlePeriodicBadgeUpdate());
+    } else if (event.tag === 'keep-alive-sync') {
+        event.waitUntil(handleKeepAliveSync());
+    }
+});
+
+// Keep-alive sync handler
+async function handleKeepAliveSync() {
+    console.log('Service Worker: Handling keep-alive sync');
+    
+    try {
+        // Perform a badge operation to demonstrate background capability
+        const shouldUpdate = await checkForUpdates();
+        
+        if (shouldUpdate) {
+            await badgeManager.incrementBadge();
+            console.log('Service Worker: Badge updated during keep-alive sync');
+            
+            // Show notification to prove SW is working in background
+            if (Notification.permission === 'granted') {
+                await self.registration.showNotification('Background Active', {
+                    body: 'Service Worker is running in background! Badge updated.',
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
+                    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔄</text></svg>',
+                    tag: 'keep-alive',
+                    silent: true,
+                    data: {
+                        action: 'keep-alive',
+                        timestamp: Date.now()
+                    }
+                });
+            }
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Service Worker: Keep-alive sync failed:', error);
+        return false;
+    }
+}
+
+// Periodic background badge updates to ensure SW persistence
+let periodicBadgeInterval;
+
+function startPeriodicBadgeUpdates() {
+    if (periodicBadgeInterval) {
+        clearInterval(periodicBadgeInterval);
+    }
+    
+    // Start periodic badge updates every 2 minutes
+    periodicBadgeInterval = setInterval(async () => {
+        console.log('Service Worker: Periodic badge update check');
+        
+        try {
+            const shouldUpdate = await checkForUpdates();
+            if (shouldUpdate) {
+                await badgeManager.incrementBadge();
+                console.log('Service Worker: Periodic badge updated to', badgeManager.badgeCount);
+                
+                // Show silent notification to prove background operation
+                if (self.registration && Notification.permission === 'granted') {
+                    await self.registration.showNotification('Background Badge Update', {
+                        body: `Badge automatically updated to ${badgeManager.badgeCount}`,
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
+                        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔄</text></svg>',
+                        tag: 'periodic-update',
+                        silent: true,
+                        requireInteraction: false,
+                        data: {
+                            action: 'periodic-update',
+                            count: badgeManager.badgeCount,
+                            timestamp: Date.now()
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Service Worker: Periodic badge update failed:', error);
+        }
+    }, 120000); // Every 2 minutes
+}
+
+// Enhanced message handling for manual badge operations
 self.addEventListener('message', (event) => {
     console.log('Service Worker: Message received', event.data);
     
@@ -315,7 +455,9 @@ self.addEventListener('message', (event) => {
                 
             case 'CLEAR_BADGE':
                 event.waitUntil(
-                    badgeManager.clearBadge()
+                    badgeManager.clearBadge().then(() => {
+                        badgeManager.resetCount(); // Reset internal counter
+                    })
                 );
                 break;
                 
@@ -325,55 +467,47 @@ self.addEventListener('message', (event) => {
                 );
                 break;
                 
+            case 'START_PERIODIC_UPDATES':
+                startPeriodicBadgeUpdates();
+                break;
+                
+            case 'STOP_PERIODIC_UPDATES':
+                if (periodicBadgeInterval) {
+                    clearInterval(periodicBadgeInterval);
+                }
+                break;
+                
             case 'PING':
                 // Keep alive ping
-                event.ports[0].postMessage({ type: 'PONG' });
+                if (event.ports && event.ports[0]) {
+                    event.ports[0].postMessage({ type: 'PONG', timestamp: Date.now() });
+                }
+                break;
+                
+            case 'GET_BADGE_COUNT':
+                if (event.ports && event.ports[0]) {
+                    event.ports[0].postMessage({ 
+                        type: 'BADGE_COUNT', 
+                        count: badgeManager.badgeCount 
+                    });
+                }
                 break;
         }
     }
 });
 
-// Periodic background task to keep service worker active
-let keepAliveInterval;
-
-self.addEventListener('activate', (event) => {
-    console.log('Service Worker: Activate event');
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Service Worker: Deleting old cache', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        }).then(() => {
-            console.log('Service Worker: Claiming clients');
-            
-            // Start keep-alive mechanism
-            startKeepAlive();
-            
-            return self.clients.claim();
-        })
-    );
-});
-
-// Keep service worker alive
-function startKeepAlive() {
-    if (keepAliveInterval) {
-        clearInterval(keepAliveInterval);
-    }
-    
-    keepAliveInterval = setInterval(() => {
-        console.log('Service Worker: Keep alive ping');
-        // This keeps the service worker active
-    }, 25000); // Every 25 seconds (before 30s timeout)
-}
-
-// Stop keep-alive when not needed
+// Stop intervals when not needed
 self.addEventListener('beforeunload', () => {
     if (keepAliveInterval) {
         clearInterval(keepAliveInterval);
     }
+    if (periodicBadgeInterval) {
+        clearInterval(periodicBadgeInterval);
+    }
+});
+
+// Listen for visibility changes to adjust behavior
+self.addEventListener('visibilitychange', () => {
+    console.log('Service Worker: Visibility changed');
+    // Service worker will continue running regardless of visibility
 });

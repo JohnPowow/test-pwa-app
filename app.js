@@ -10,6 +10,9 @@ class BadgeDemo {
         this.backgroundSyncBtn = document.getElementById('backgroundSyncBtn');
         this.swBadgeBtn = document.getElementById('swBadgeBtn');
         this.swClearBtn = document.getElementById('swClearBtn');
+        this.checkSWBtn = document.getElementById('checkSWBtn');
+        this.reregisterSWBtn = document.getElementById('reregisterSWBtn');
+        this.startPeriodicBtn = document.getElementById('startPeriodicBtn');
         this.swStatus = document.getElementById('swStatus');
         
         this.timeoutId = null;
@@ -34,6 +37,15 @@ class BadgeDemo {
         }
         if (this.swClearBtn) {
             this.swClearBtn.addEventListener('click', () => this.clearBadgeViaSW());
+        }
+        if (this.checkSWBtn) {
+            this.checkSWBtn.addEventListener('click', () => window.swManager?.checkSWStatus());
+        }
+        if (this.reregisterSWBtn) {
+            this.reregisterSWBtn.addEventListener('click', () => this.reregisterSW());
+        }
+        if (this.startPeriodicBtn) {
+            this.startPeriodicBtn.addEventListener('click', () => this.startPeriodicFromUI());
         }
         
         // Check for URL parameters (for shortcuts)
@@ -230,6 +242,38 @@ class BadgeDemo {
             this.updateSWStatus('❌ Failed to clear badge via service worker', 'error');
         }
     }
+    
+    async reregisterSW() {
+        try {
+            this.updateSWStatus('🔄 Re-registering service worker...', 'info');
+            
+            if (window.swManager) {
+                await window.swManager.unregisterExisting();
+                // Reinitialize the SW manager
+                window.swManager = new ServiceWorkerManager();
+                this.updateSWStatus('✅ Service worker re-registered successfully!', 'success');
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to re-register SW:', error);
+            this.updateSWStatus('❌ Failed to re-register service worker', 'error');
+        }
+    }
+    
+    async startPeriodicFromUI() {
+        try {
+            if (window.swManager) {
+                await window.swManager.startPeriodicUpdates();
+                this.updateSWStatus('🔄 Periodic background updates started! Badges will update every 2 minutes.', 'success');
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to start periodic updates:', error);
+            this.updateSWStatus('❌ Failed to start periodic updates', 'error');
+        }
+    }
 }
 
 // PWA Installation handling
@@ -335,9 +379,21 @@ class ServiceWorkerManager {
     async init() {
         if ('serviceWorker' in navigator) {
             try {
-                // Register service worker
-                this.registration = await navigator.serviceWorker.register('/service-worker.js');
+                // Unregister any existing service workers first
+                await this.unregisterExisting();
+                
+                // Register service worker with proper path for GitHub Pages
+                this.registration = await navigator.serviceWorker.register('./service-worker.js', {
+                    scope: './',
+                    updateViaCache: 'none' // Force fresh fetches
+                });
+                
                 console.log('SW registered:', this.registration);
+                console.log('SW scope:', this.registration.scope);
+                
+                // Wait for service worker to be ready
+                await navigator.serviceWorker.ready;
+                console.log('SW is ready');
                 
                 // Set up message channel for communication
                 this.setupMessageChannel();
@@ -345,15 +401,58 @@ class ServiceWorkerManager {
                 // Request notification permission
                 await this.requestNotificationPermission();
                 
-                // Register background sync
-                await this.registerBackgroundSync();
+                // Register background sync after SW is active
+                setTimeout(async () => {
+                    await this.registerBackgroundSync();
+                    await this.startPeriodicUpdates();
+                }, 1000);
                 
                 // Set up keep-alive mechanism
                 this.startKeepAlive();
                 
+                // Listen for updates
+                this.handleUpdates();
+                
             } catch (error) {
                 console.error('SW registration failed:', error);
+                console.error('Error details:', error.message, error.stack);
             }
+        } else {
+            console.error('Service Workers not supported');
+        }
+    }
+    
+    async unregisterExisting() {
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            console.log('Found existing registrations:', registrations.length);
+            
+            for (let registration of registrations) {
+                console.log('Unregistering:', registration.scope);
+                await registration.unregister();
+            }
+        } catch (error) {
+            console.error('Failed to unregister existing SW:', error);
+        }
+    }
+    
+    handleUpdates() {
+        if (this.registration) {
+            this.registration.addEventListener('updatefound', () => {
+                console.log('SW update found');
+                const newWorker = this.registration.installing;
+                
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        console.log('SW state changed:', newWorker.state);
+                        
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('New SW installed, reloading page');
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
         }
     }
     
@@ -361,7 +460,32 @@ class ServiceWorkerManager {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', (event) => {
                 console.log('Message from SW:', event.data);
+                
+                if (event.data && event.data.type === 'SW_ACTIVATED') {
+                    console.log('✅ Service Worker is now active and ready');
+                    this.showSWStatus('✅ Service Worker active and ready for background operations!', 'success');
+                }
             });
+            
+            // Monitor service worker state changes
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('SW controller changed');
+                window.location.reload();
+            });
+        }
+    }
+    
+    showSWStatus(message, type) {
+        // Show status in the SW section if available
+        const swStatus = document.getElementById('swStatus');
+        if (swStatus) {
+            swStatus.textContent = message;
+            swStatus.className = `status ${type}`;
+            
+            setTimeout(() => {
+                swStatus.textContent = '';
+                swStatus.className = 'status';
+            }, 8000);
         }
     }
     
@@ -378,14 +502,49 @@ class ServiceWorkerManager {
         if ('serviceWorker' in navigator && 'sync' in window) {
             try {
                 const registration = await navigator.serviceWorker.ready;
-                if ('sync' in registration) {
+                console.log('SW Registration state:', registration);
+                console.log('SW active:', registration.active ? registration.active.state : 'none');
+                console.log('SW installing:', registration.installing ? registration.installing.state : 'none');
+                console.log('SW waiting:', registration.waiting ? registration.waiting.state : 'none');
+                
+                if ('sync' in registration && registration.active) {
                     // Register background sync for badge updates
                     await registration.sync.register('background-badge-sync');
-                    console.log('Background sync registered');
+                    console.log('✅ Background sync registered successfully');
+                    this.showSWStatus('🔄 Background sync capabilities enabled', 'success');
+                } else {
+                    console.warn('Background sync not available or SW not active');
                 }
             } catch (error) {
                 console.error('Background sync registration failed:', error);
+                this.showSWStatus('⚠️ Background sync registration failed', 'warning');
             }
+        } else {
+            console.warn('Background sync not supported');
+            this.showSWStatus('⚠️ Background sync not supported in this browser', 'warning');
+        }
+    }
+    
+    // Diagnostic method to check SW status
+    async checkSWStatus() {
+        try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            console.log('=== Service Worker Diagnostics ===');
+            console.log('Registrations found:', registrations.length);
+            
+            registrations.forEach((reg, index) => {
+                console.log(`Registration ${index + 1}:`);
+                console.log('  Scope:', reg.scope);
+                console.log('  Active:', reg.active ? reg.active.state : 'none');
+                console.log('  Installing:', reg.installing ? reg.installing.state : 'none');  
+                console.log('  Waiting:', reg.waiting ? reg.waiting.state : 'none');
+            });
+            
+            console.log('Controller:', navigator.serviceWorker.controller ? 'Present' : 'None');
+            console.log('Ready state:', await navigator.serviceWorker.ready ? 'Ready' : 'Not ready');
+            console.log('================================');
+        } catch (error) {
+            console.error('SW diagnostics failed:', error);
         }
     }
     
@@ -411,6 +570,32 @@ class ServiceWorkerManager {
     async triggerBackgroundSync() {
         await this.sendMessageToSW({
             type: 'START_BACKGROUND_SYNC'
+        });
+    }
+    
+    async startPeriodicUpdates() {
+        await this.sendMessageToSW({
+            type: 'START_PERIODIC_UPDATES'
+        });
+        console.log('✅ Periodic badge updates started');
+    }
+    
+    async getBadgeCount() {
+        return new Promise((resolve) => {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                const channel = new MessageChannel();
+                channel.port1.onmessage = (event) => {
+                    if (event.data.type === 'BADGE_COUNT') {
+                        resolve(event.data.count);
+                    }
+                };
+                navigator.serviceWorker.controller.postMessage(
+                    { type: 'GET_BADGE_COUNT' },
+                    [channel.port2]
+                );
+            } else {
+                resolve(0);
+            }
         });
     }
     
