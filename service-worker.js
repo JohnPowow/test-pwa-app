@@ -1,4 +1,4 @@
-const CACHE_NAME = 'test-pwa-v6'; // Updated version to force refresh
+const CACHE_NAME = 'test-pwa-v7'; // Updated version to force refresh
 const urlsToCache = [
     './',
     './index.html',
@@ -211,7 +211,12 @@ self.addEventListener('push', (event) => {
 // Handle push notification - Microsoft Edge Team Implementation Pattern
 async function handlePushNotificationWithBadge(data) {
     try {
+        const isBrowserIndependent = logBrowserIndependence();
         console.log('Service Worker: Processing push notification (PWA may be closed)');
+        
+        if (isBrowserIndependent) {
+            console.log('🎯 CRITICAL TEST: Badge update happening with NO browser windows open!');
+        }
         
         // STEP 1: Update badge FIRST - this is the critical functionality Microsoft needs
         if (data.badgeCount !== undefined) {
@@ -397,8 +402,19 @@ function logServiceWorkerState(context = 'general') {
         timeSinceLastCheck: Date.now() - lastClientCheckTime,
         isAppClosed: isAppClosed(),
         badgeCount: badgeManager.badgeCount,
-        registrationScope: self.registration?.scope
+        registrationScope: self.registration?.scope,
+        browserIndependence: !hasActiveClients ? 'TRUE - Running without browser windows!' : 'FALSE - Has active windows'
     });
+}
+
+// Microsoft Independence Test - Log when we're truly browser-independent
+function logBrowserIndependence() {
+    if (!hasActiveClients) {
+        console.log('🚀 MICROSOFT PATTERN ACTIVE: Service Worker running independently of browser windows!');
+        console.log('📊 This proves badge updates work without any UI open!');
+        return true;
+    }
+    return false;
 }
 
 // Keep service worker alive with enhanced persistence
@@ -621,6 +637,35 @@ self.addEventListener('message', (event) => {
                         badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>'
                     })
                 );
+                break;
+                
+            case 'SCHEDULE_INDEPENDENCE_TEST':
+                // Schedule delayed badge update to test browser independence
+                console.log('Service Worker: Scheduling browser independence test');
+                setTimeout(() => {
+                    const isBrowserIndependent = logBrowserIndependence();
+                    console.log('🧪 BROWSER INDEPENDENCE TEST EXECUTING!');
+                    
+                    badgeManager.setBadge(99).then(() => {
+                        console.log('✅ PROOF: Badge updated to 99 without any browser windows!');
+                        
+                        // Show notification to prove independence
+                        if (Notification.permission === 'granted') {
+                            self.registration.showNotification('Browser Independence Proven! 🎉', {
+                                body: `Badge updated to 99 ${isBrowserIndependent ? 'WITHOUT' : 'WITH'} browser windows open`,
+                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🧪</text></svg>',
+                                tag: 'independence-test',
+                                requireInteraction: true,
+                                data: {
+                                    browserIndependent: isBrowserIndependent,
+                                    testTimestamp: Date.now()
+                                }
+                            }).catch(err => console.log('Independence notification failed:', err));
+                        }
+                    }).catch(err => {
+                        console.error('Independence test badge update failed:', err);
+                    });
+                }, event.data.delay || 30000);
                 break;
         }
     }

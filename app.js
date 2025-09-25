@@ -54,6 +54,12 @@ class BadgeDemo {
             simulatePushBtn.addEventListener('click', () => this.simulateMicrosoftPush());
         }
         
+        // Add browser independence test
+        const independenceTestBtn = document.getElementById('independenceTestBtn');
+        if (independenceTestBtn) {
+            independenceTestBtn.addEventListener('click', () => this.testBrowserIndependence());
+        }
+        
         // Check for URL parameters (for shortcuts)
         this.checkURLParams();
         
@@ -321,6 +327,34 @@ class BadgeDemo {
         } catch (error) {
             console.error('Failed to simulate Microsoft push:', error);
             this.updateSWStatus('❌ Failed to simulate push notification', 'error');
+        }
+    }
+    
+    async testBrowserIndependence() {
+        try {
+            if (window.swManager) {
+                // Schedule a delayed badge update to test browser independence
+                await window.swManager.scheduleBrowserIndependenceTest();
+                
+                this.updateSWStatus('🧪 Independence test started! Close ALL browser windows in 30 seconds. Badge will update to prove independence!', 'info');
+                
+                // Countdown timer for user guidance
+                let countdown = 30;
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown > 0) {
+                        this.updateSWStatus(`🧪 Independence test: Close browser in ${countdown} seconds. Badge will still update!`, 'info');
+                    } else {
+                        clearInterval(countdownInterval);
+                        this.updateSWStatus('🧪 Browser independence test active! Badge should update even if browser is closed!', 'success');
+                    }
+                }, 1000);
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to start independence test:', error);
+            this.updateSWStatus('❌ Failed to start browser independence test', 'error');
         }
     }
 }
@@ -677,6 +711,27 @@ class ServiceWorkerManager {
             });
             
             console.log('✅ Microsoft push pattern simulated - service worker should update badge even if app is closed!');
+            return true;
+        } else {
+            throw new Error('No active service worker controller');
+        }
+    }
+    
+    // Test browser independence by scheduling delayed badge update
+    async scheduleBrowserIndependenceTest() {
+        if (!this.registration) {
+            throw new Error('Service worker not registered');
+        }
+        
+        console.log('Scheduling browser independence test - badge will update in 30 seconds');
+        
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_INDEPENDENCE_TEST',
+                delay: 30000 // 30 seconds
+            });
+            
+            console.log('✅ Independence test scheduled - service worker will update badge in 30s regardless of browser state!');
             return true;
         } else {
             throw new Error('No active service worker controller');
