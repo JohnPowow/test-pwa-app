@@ -1,4 +1,4 @@
-const CACHE_NAME = 'test-pwa-v3'; // Updated version to force refresh
+const CACHE_NAME = 'test-pwa-v6'; // Updated version to force refresh
 const urlsToCache = [
     './',
     './index.html',
@@ -77,7 +77,7 @@ class BackgroundBadgeManager {
                 return true;
             }
         } catch (error) {
-            console.error('Service Worker: Failed to set badge:', error);
+            console.error('Service Worker: Failed to set badge:', error.name, error.message);
         }
         return false;
     }
@@ -90,7 +90,7 @@ class BackgroundBadgeManager {
                 return true;
             }
         } catch (error) {
-            console.error('Service Worker: Failed to clear badge:', error);
+            console.error('Service Worker: Failed to clear badge:', error.name, error.message);
         }
         return false;
     }
@@ -178,34 +178,77 @@ async function handlePeriodicBadgeUpdate() {
     }
 }
 
-// Handle push notifications for badge updates
+// Handle push notifications for badge updates - Microsoft Edge Team Pattern
 self.addEventListener('push', (event) => {
-    console.log('Service Worker: Push event received', event);
+    console.log('Service Worker: Push event received (app may be closed)', event);
+    logServiceWorkerState('push-received');
     
     let notificationData = {
-        title: 'Push Notification',
-        body: 'Badge update via push',
+        title: 'MSN Play Style Notification',
+        body: 'New game activity - Badge update via push',
         icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
         badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>',
-        tag: 'push-badge-update'
+        tag: 'msn-play-badge-update',
+        badgeCount: 1
     };
     
-    // Parse push data if available
+    // Parse push data if available (matches Microsoft's backend payload)
     if (event.data) {
         try {
             const data = event.data.json();
             notificationData = { ...notificationData, ...data };
+            console.log('Service Worker: Parsed push payload:', data);
         } catch (e) {
             notificationData.body = event.data.text();
         }
     }
     
     event.waitUntil(
-        handlePushNotification(notificationData)
+        handlePushNotificationWithBadge(notificationData)
     );
 });
 
-// Handle push notification
+// Handle push notification - Microsoft Edge Team Implementation Pattern
+async function handlePushNotificationWithBadge(data) {
+    try {
+        console.log('Service Worker: Processing push notification (PWA may be closed)');
+        
+        // STEP 1: Update badge FIRST - this is the critical functionality Microsoft needs
+        if (data.badgeCount !== undefined) {
+            await badgeManager.setBadge(data.badgeCount);
+            console.log(`✅ Service Worker: Badge updated to ${data.badgeCount} while app is closed!`);
+        } else {
+            await badgeManager.incrementBadge();
+            console.log(`✅ Service Worker: Badge incremented to ${badgeManager.badgeCount} while app is closed!`);
+        }
+        
+        // STEP 2: Show Windows notification - secondary functionality
+        await self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: data.icon,
+            badge: data.badge,
+            tag: data.tag || 'msn-play-notification',
+            requireInteraction: true, // Keep notification visible
+            data: {
+                action: 'push-received',
+                badgeCount: badgeManager.badgeCount,
+                timestamp: Date.now(),
+                appWasClosed: !hasActiveClients
+            }
+        });
+        
+        console.log('✅ Service Worker: Both badge and notification updated successfully!');
+        logServiceWorkerState('push-handled');
+        
+        return true;
+    } catch (error) {
+        console.error('Service Worker: Failed to handle push notification:', error.name, error.message);
+        logServiceWorkerState('push-error');
+        return false;
+    }
+}
+
+// Original handle push notification function (keeping for compatibility)
 async function handlePushNotification(data) {
     try {
         // Update badge based on push data
@@ -322,34 +365,106 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+// PWA Detection and Client Management in Service Worker
+let hasActiveClients = false;
+let lastClientCheckTime = 0;
+
+function isPWAMode() {
+    // Check if any clients are running in standalone mode
+    return self.clients.matchAll().then(clients => {
+        hasActiveClients = clients.length > 0;
+        lastClientCheckTime = Date.now();
+        
+        return clients.some(client => {
+            // Check client URL for PWA indicators
+            return client.url.includes('?standalone=true') || 
+                   client.type === 'window'; // Installed PWAs typically show as 'window'
+        });
+    });
+}
+
+// Check if app has been closed for a while
+function isAppClosed() {
+    const timeSinceLastCheck = Date.now() - lastClientCheckTime;
+    return !hasActiveClients && timeSinceLastCheck > 30000; // 30 seconds since last client check
+}
+
+// Enhanced logging for debugging
+function logServiceWorkerState(context = 'general') {
+    console.log(`[${context}] SW State:`, {
+        hasActiveClients,
+        lastClientCheckTime: new Date(lastClientCheckTime).toISOString(),
+        timeSinceLastCheck: Date.now() - lastClientCheckTime,
+        isAppClosed: isAppClosed(),
+        badgeCount: badgeManager.badgeCount,
+        registrationScope: self.registration?.scope
+    });
+}
+
 // Keep service worker alive with enhanced persistence
 function startKeepAlive() {
     if (keepAliveInterval) {
         clearInterval(keepAliveInterval);
     }
     
-    keepAliveInterval = setInterval(() => {
-        console.log('Service Worker: Keep alive ping');
+    keepAliveInterval = setInterval(async () => {
+        const clientCount = await self.clients.matchAll().then(clients => clients.length);
+        console.log(`Service Worker: Keep alive ping (clients: ${clientCount})`);
+        
+        const isPWA = await isPWAMode().catch(() => false);
+        const appClosed = isAppClosed();
+        const syncFrequency = isPWA ? 0.9 : 0.8; // More frequent in PWA mode
+        
+        // Adjust behavior based on app state
+        if (appClosed) {
+            console.log('Service Worker: App appears to be closed, using closed-app strategy');
+            logServiceWorkerState('closed-app');
+        }
         
         // Perform badge operations to keep SW active
-        if (Math.random() > 0.8) { // 20% chance
-            console.log('Service Worker: Performing background badge check');
+        if (Math.random() > syncFrequency) {
+            console.log(`Service Worker: Performing background badge check (PWA mode: ${isPWA})`);
             checkForUpdates().then(shouldUpdate => {
                 if (shouldUpdate) {
                     badgeManager.incrementBadge();
+                    
+                    // More aggressive notifications in PWA mode to prove it's working
+                    if (isPWA && Notification.permission === 'granted') {
+                        self.registration.showNotification('PWA Background Active', {
+                            body: `Badge updated to ${badgeManager.badgeCount} (PWA mode)`,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
+                            tag: 'pwa-background',
+                            silent: true,
+                            data: { source: 'pwa-background' }
+                        }).catch(err => console.log('PWA notification failed:', err));
+                    }
                 }
             }).catch(err => {
-                console.log('Background check error:', err);
+                console.log('Background check error:', err.name, '-', err.message);
+                logServiceWorkerState('background-error');
             });
         }
         
-        // Register periodic sync to ensure background capability
-        if (self.registration && self.registration.sync) {
-            self.registration.sync.register('keep-alive-sync').catch(err => {
-                console.log('Keep-alive sync registration failed:', err);
-            });
-        }
-    }, 20000); // Every 20 seconds (well before 30s timeout)
+        // Register periodic sync to ensure background capability (only when clients are connected)
+        self.clients.matchAll().then(clients => {
+            if (clients.length > 0 && self.registration && self.registration.sync) {
+                // Only try to register sync when there are active clients
+                self.registration.sync.register('keep-alive-sync').catch(err => {
+                    console.log('Keep-alive sync registration failed (expected when no clients):', err.name);
+                });
+            } else {
+                // When no clients, just perform direct badge operation as fallback
+                console.log('Service Worker: No clients connected, performing direct badge operation');
+                if (Math.random() > 0.7) { // 30% chance for background operation
+                    badgeManager.incrementBadge().catch(err => {
+                        console.log('Background badge operation failed:', err.name);
+                    });
+                }
+            }
+        }).catch(err => {
+            console.log('Client check failed:', err.name);
+        });
+    }, 15000); // Every 15 seconds for better PWA persistence
 }
 
 // Enhanced background sync for keep-alive
@@ -491,6 +606,21 @@ self.addEventListener('message', (event) => {
                         count: badgeManager.badgeCount 
                     });
                 }
+                break;
+                
+            case 'SIMULATE_PUSH':
+                // Microsoft Edge Team Pattern - Simulate external push
+                console.log('Service Worker: Simulating Microsoft-style push notification');
+                event.waitUntil(
+                    handlePushNotificationWithBadge({
+                        title: event.data.data.title || 'MSN Play Game',
+                        body: event.data.data.body || 'Game activity update',
+                        badgeCount: event.data.data.badgeCount || 1,
+                        tag: 'microsoft-push-simulation',
+                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
+                        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>'
+                    })
+                );
                 break;
         }
     }

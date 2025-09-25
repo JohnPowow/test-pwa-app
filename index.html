@@ -72,6 +72,10 @@
                     <span>Start Periodic Updates</span>
                 </button>
                 
+                <button id="simulatePushBtn" class="badge-button" style="background: #ff6b35;">
+                    <span>🚀 Simulate MSN Push (Microsoft Pattern)</span>
+                </button>
+                
                 <div class="status" id="swStatus"></div>
             </div>
             
@@ -84,6 +88,14 @@
                     <li>Use "Clear Badge" to remove it</li>
                     <li><strong>Background Sync:</strong> Triggers badge updates even when closed</li>
                     <li><strong>Service Worker:</strong> Persistent background operations</li>
+                </ul>
+                
+                <h4>🔄 Background Sync Notes:</h4>
+                <ul>
+                    <li><strong>Browser Mode:</strong> Background sync works more reliably</li>
+                    <li><strong>Installed PWA:</strong> More limited due to OS battery optimization</li>
+                    <li><strong>Testing:</strong> Try closing/reopening PWA or use background sync buttons</li>
+                    <li><strong>Persistence:</strong> Service worker uses multiple keep-alive strategies</li>
                 </ul>
             </div>
         </main>
