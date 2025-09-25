@@ -1,4 +1,4 @@
-/* Test PWA - App Badge Demo Styles */
+/* Test PWA - App Badge Demo Styles - Light Pink Theme */
 
 /* Reset and Base Styles */
 * {
@@ -10,8 +10,8 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     line-height: 1.6;
-    color: #333;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #4a4a4a;
+    background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 50%, #e1bee7 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -25,33 +25,35 @@ body {
 /* Header */
 header {
     text-align: center;
-    color: white;
+    color: #ad1457;
     margin-bottom: 30px;
 }
 
 header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 4px rgba(173, 20, 87, 0.2);
 }
 
 header p {
     font-size: 1.2rem;
-    opacity: 0.9;
+    opacity: 0.8;
+    color: #880e4f;
 }
 
 /* Cards */
 .card, .info-card {
-    background: white;
-    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
     padding: 30px;
     margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 30px rgba(173, 20, 87, 0.15);
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(248, 187, 217, 0.3);
 }
 
 .card h2 {
-    color: #2196F3;
+    color: #c2185b;
     margin-bottom: 15px;
     font-size: 1.5rem;
 }
@@ -66,7 +68,7 @@ header p {
 }
 
 .info-card h3 {
-    color: #4CAF50;
+    color: #ad1457;
     margin-bottom: 15px;
     font-size: 1.3rem;
 }
@@ -87,7 +89,7 @@ header p {
     content: '✓';
     position: absolute;
     left: 0;
-    color: #4CAF50;
+    color: #e91e63;
     font-weight: bold;
 }
 
@@ -111,15 +113,15 @@ header p {
 }
 
 .badge-button {
-    background: linear-gradient(135deg, #2196F3, #1976D2);
+    background: linear-gradient(135deg, #e91e63, #c2185b);
     color: white;
-    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.4);
+    box-shadow: 0 4px 15px rgba(233, 30, 99, 0.4);
 }
 
 .badge-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1976D2, #1565C0);
+    background: linear-gradient(135deg, #c2185b, #ad1457);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.6);
 }
 
 .badge-button:disabled {
@@ -129,15 +131,15 @@ header p {
 }
 
 .clear-button {
-    background: linear-gradient(135deg, #f44336, #d32f2f);
+    background: linear-gradient(135deg, #f06292, #ec407a);
     color: white;
-    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    box-shadow: 0 4px 15px rgba(240, 98, 146, 0.4);
 }
 
 .clear-button:hover:not(:disabled) {
-    background: linear-gradient(135deg, #d32f2f, #c62828);
+    background: linear-gradient(135deg, #ec407a, #e91e63);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+    box-shadow: 0 6px 20px rgba(240, 98, 146, 0.6);
 }
 
 .loading-indicator {
@@ -163,27 +165,27 @@ header p {
 }
 
 .status.success {
-    background: #e8f5e8;
-    color: #2e7d2e;
-    border: 1px solid #4caf50;
+    background: #fce4ec;
+    color: #ad1457;
+    border: 1px solid #e91e63;
 }
 
 .status.error {
     background: #ffebee;
-    color: #c62828;
-    border: 1px solid #f44336;
+    color: #c2185b;
+    border: 1px solid #f06292;
 }
 
 .status.warning {
-    background: #fff3e0;
-    color: #ef6c00;
-    border: 1px solid #ff9800;
+    background: #fdf2f8;
+    color: #be185d;
+    border: 1px solid #f472b6;
 }
 
 .status.info {
-    background: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #2196f3;
+    background: #f3e5f5;
+    color: #7b1fa2;
+    border: 1px solid #ba68c8;
 }
 
 /* Install Banner */
@@ -192,11 +194,11 @@ header p {
     top: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+    background: linear-gradient(135deg, #e91e63, #c2185b);
     color: white;
     padding: 15px;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 10px rgba(233, 30, 99, 0.3);
     display: none;
 }
 
@@ -221,11 +223,11 @@ header p {
 
 .install-btn {
     background: white;
-    color: #4CAF50;
+    color: #e91e63;
 }
 
 .install-btn:hover {
-    background: #f0f0f0;
+    background: #f8bbd9;
 }
 
 .dismiss-btn {
@@ -293,13 +295,17 @@ header p {
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #2d1b2e 0%, #4a1e3a 50%, #5e1855 100%);
+    }
+    
     .card, .info-card {
-        background: rgba(40, 40, 40, 0.95);
+        background: rgba(40, 35, 40, 0.95);
         color: #e0e0e0;
     }
     
     .card h2 {
-        color: #64B5F6;
+        color: #f48fb1;
     }
     
     .card p {
@@ -307,7 +313,7 @@ header p {
     }
     
     .info-card h3 {
-        color: #81C784;
+        color: #f06292;
     }
     
     .info-card li {

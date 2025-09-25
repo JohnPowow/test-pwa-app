@@ -6,11 +6,7 @@ class BadgeDemo {
         this.status = document.getElementById('status');
         this.loadingIndicator = document.getElementById('loadingIndicator');
         
-        // New background sync buttons
-        this.backgroundSyncBtn = document.getElementById('backgroundSyncBtn');
-        this.swBadgeBtn = document.getElementById('swBadgeBtn');
-        this.swClearBtn = document.getElementById('swClearBtn');
-        this.checkSWBtn = document.getElementById('checkSWBtn');
+        // Remaining buttons
         this.reregisterSWBtn = document.getElementById('reregisterSWBtn');
         this.startPeriodicBtn = document.getElementById('startPeriodicBtn');
         this.swStatus = document.getElementById('swStatus');
@@ -28,30 +24,12 @@ class BadgeDemo {
         this.setBadgeBtn.addEventListener('click', () => this.startBadgeTimer());
         this.clearBadgeBtn.addEventListener('click', () => this.clearBadge());
         
-        // Background sync event listeners
-        if (this.backgroundSyncBtn) {
-            this.backgroundSyncBtn.addEventListener('click', () => this.triggerBackgroundSync());
-        }
-        if (this.swBadgeBtn) {
-            this.swBadgeBtn.addEventListener('click', () => this.setBadgeViaSW());
-        }
-        if (this.swClearBtn) {
-            this.swClearBtn.addEventListener('click', () => this.clearBadgeViaSW());
-        }
-        if (this.checkSWBtn) {
-            this.checkSWBtn.addEventListener('click', () => window.swManager?.checkSWStatus());
-        }
+        // Remaining event listeners
         if (this.reregisterSWBtn) {
             this.reregisterSWBtn.addEventListener('click', () => this.reregisterSW());
         }
         if (this.startPeriodicBtn) {
             this.startPeriodicBtn.addEventListener('click', () => this.startPeriodicFromUI());
-        }
-        
-        // Add Microsoft-style push simulation
-        const simulatePushBtn = document.getElementById('simulatePushBtn');
-        if (simulatePushBtn) {
-            simulatePushBtn.addEventListener('click', () => this.simulateMicrosoftPush());
         }
         
         // Add browser independence test
@@ -223,53 +201,7 @@ class BadgeDemo {
         }
     }
     
-    async triggerBackgroundSync() {
-        try {
-            if (window.swManager) {
-                const isPWA = this.isPWAInstalled();
-                await window.swManager.triggerBackgroundSync();
-                
-                if (isPWA) {
-                    this.updateSWStatus('🔄 Background sync triggered! Note: PWA mode may limit background execution. Try closing and reopening the app.', 'info');
-                } else {
-                    this.updateSWStatus('🔄 Background sync triggered! Check your badge in a few seconds.', 'success');
-                }
-            } else {
-                this.updateSWStatus('❌ Service worker manager not available', 'error');
-            }
-        } catch (error) {
-            console.error('Failed to trigger background sync:', error);
-            this.updateSWStatus('❌ Failed to trigger background sync', 'error');
-        }
-    }
-    
-    async setBadgeViaSW() {
-        try {
-            if (window.swManager) {
-                await window.swManager.setBadgeViaSW(1);
-                this.updateSWStatus('🐱 Badge set via service worker!', 'success');
-            } else {
-                this.updateSWStatus('❌ Service worker manager not available', 'error');
-            }
-        } catch (error) {
-            console.error('Failed to set badge via SW:', error);
-            this.updateSWStatus('❌ Failed to set badge via service worker', 'error');
-        }
-    }
-    
-    async clearBadgeViaSW() {
-        try {
-            if (window.swManager) {
-                await window.swManager.clearBadgeViaSW();
-                this.updateSWStatus('🧹 Badge cleared via service worker!', 'success');
-            } else {
-                this.updateSWStatus('❌ Service worker manager not available', 'error');
-            }
-        } catch (error) {
-            console.error('Failed to clear badge via SW:', error);
-            this.updateSWStatus('❌ Failed to clear badge via service worker', 'error');
-        }
-    }
+
     
     async reregisterSW() {
         try {
@@ -303,32 +235,7 @@ class BadgeDemo {
         }
     }
     
-    async simulateMicrosoftPush() {
-        try {
-            const isPWA = this.isPWAInstalled();
-            const mode = isPWA ? 'PWA mode (app may be closed)' : 'Browser mode';
-            
-            if (window.swManager) {
-                // Simulate the exact Microsoft pattern from their document
-                const pushData = {
-                    title: 'MSN Play Game Update',
-                    body: 'You have new game activity! Badge should update even if app is closed.',
-                    badgeCount: Math.floor(Math.random() * 10) + 1,
-                    gameId: 'test-game-123',
-                    timestamp: Date.now()
-                };
-                
-                await window.swManager.simulateExternalPush(pushData);
-                
-                this.updateSWStatus(`🚀 Microsoft-style push simulated in ${mode}! Badge: ${pushData.badgeCount}. Check notifications.`, 'success');
-            } else {
-                this.updateSWStatus('❌ Service worker manager not available', 'error');
-            }
-        } catch (error) {
-            console.error('Failed to simulate Microsoft push:', error);
-            this.updateSWStatus('❌ Failed to simulate push notification', 'error');
-        }
-    }
+
     
     async testBrowserIndependence() {
         try {
@@ -546,7 +453,7 @@ class ServiceWorkerManager {
                 
                 if (event.data && event.data.type === 'SW_ACTIVATED') {
                     console.log('✅ Service Worker is now active and ready');
-                    this.showSWStatus('✅ Service Worker active and ready for background operations!', 'success');
+                    this.updateSWStatus('✅ Service Worker active and ready for background operations!', 'success');
                 }
             });
             
@@ -558,19 +465,7 @@ class ServiceWorkerManager {
         }
     }
     
-    showSWStatus(message, type) {
-        // Show status in the SW section if available
-        const swStatus = document.getElementById('swStatus');
-        if (swStatus) {
-            swStatus.textContent = message;
-            swStatus.className = `status ${type}`;
-            
-            setTimeout(() => {
-                swStatus.textContent = '';
-                swStatus.className = 'status';
-            }, 8000);
-        }
-    }
+
     
     async requestNotificationPermission() {
         if ('Notification' in window) {
@@ -594,42 +489,21 @@ class ServiceWorkerManager {
                     // Register background sync for badge updates
                     await registration.sync.register('background-badge-sync');
                     console.log('✅ Background sync registered successfully');
-                    this.showSWStatus('🔄 Background sync capabilities enabled', 'success');
+                    this.updateSWStatus('🔄 Background sync capabilities enabled', 'success');
                 } else {
                     console.warn('Background sync not available or SW not active');
                 }
             } catch (error) {
                 console.error('Background sync registration failed:', error);
-                this.showSWStatus('⚠️ Background sync registration failed', 'warning');
+                this.updateSWStatus('⚠️ Background sync registration failed', 'warning');
             }
         } else {
             console.warn('Background sync not supported');
-            this.showSWStatus('⚠️ Background sync not supported in this browser', 'warning');
+                this.updateSWStatus('⚠️ Background sync not supported in this browser', 'warning');
         }
     }
     
-    // Diagnostic method to check SW status
-    async checkSWStatus() {
-        try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            console.log('=== Service Worker Diagnostics ===');
-            console.log('Registrations found:', registrations.length);
-            
-            registrations.forEach((reg, index) => {
-                console.log(`Registration ${index + 1}:`);
-                console.log('  Scope:', reg.scope);
-                console.log('  Active:', reg.active ? reg.active.state : 'none');
-                console.log('  Installing:', reg.installing ? reg.installing.state : 'none');  
-                console.log('  Waiting:', reg.waiting ? reg.waiting.state : 'none');
-            });
-            
-            console.log('Controller:', navigator.serviceWorker.controller ? 'Present' : 'None');
-            console.log('Ready state:', await navigator.serviceWorker.ready ? 'Ready' : 'Not ready');
-            console.log('================================');
-        } catch (error) {
-            console.error('SW diagnostics failed:', error);
-        }
-    }
+
     
     async sendMessageToSW(message) {
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -637,24 +511,7 @@ class ServiceWorkerManager {
         }
     }
     
-    async setBadgeViaSW(count = 1) {
-        await this.sendMessageToSW({
-            type: 'SET_BADGE',
-            count: count
-        });
-    }
-    
-    async clearBadgeViaSW() {
-        await this.sendMessageToSW({
-            type: 'CLEAR_BADGE'
-        });
-    }
-    
-    async triggerBackgroundSync() {
-        await this.sendMessageToSW({
-            type: 'START_BACKGROUND_SYNC'
-        });
-    }
+
     
     async startPeriodicUpdates() {
         await this.sendMessageToSW({
@@ -695,27 +552,7 @@ class ServiceWorkerManager {
         }, 25000); // Every 25 seconds
     }
     
-    // Simulate Microsoft Edge Team Push Notification Pattern
-    async simulateExternalPush(pushData) {
-        if (!this.registration) {
-            throw new Error('Service worker not registered');
-        }
-        
-        console.log('Simulating Microsoft-style push notification:', pushData);
-        
-        // Send push data directly to service worker (simulating external push)
-        if (navigator.serviceWorker.controller) {
-            navigator.serviceWorker.controller.postMessage({
-                type: 'SIMULATE_PUSH',
-                data: pushData
-            });
-            
-            console.log('✅ Microsoft push pattern simulated - service worker should update badge even if app is closed!');
-            return true;
-        } else {
-            throw new Error('No active service worker controller');
-        }
-    }
+
     
     // Test browser independence by scheduling delayed badge update
     async scheduleBrowserIndependenceTest() {

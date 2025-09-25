@@ -7,7 +7,7 @@
     
     <!-- PWA Meta Tags -->
     <meta name="description" content="A test PWA that demonstrates setAppBadge functionality">
-    <meta name="theme-color" content="#2196F3">
+    <meta name="theme-color" content="#f8bbd9">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Test PWA">
@@ -16,8 +16,8 @@
     <link rel="manifest" href="manifest.json">
     
     <!-- Favicon and Icons -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐱</text></svg>">
+    <link rel="icon" href="AppImages/android/android-launchericon-192-192.png">
+    <link rel="apple-touch-icon" href="AppImages/android/android-launchericon-192-192.png">
     
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
@@ -45,24 +45,8 @@
             </div>
             
             <div class="card">
-                <h2>🔄 Background Badge Testing</h2>
-                <p>Test background service worker functionality - these work even when the app is closed!</p>
-                
-                <button id="backgroundSyncBtn" class="badge-button">
-                    <span>Trigger Background Sync</span>
-                </button>
-                
-                <button id="swBadgeBtn" class="badge-button">
-                    <span>Set Badge via SW</span>
-                </button>
-                
-                <button id="swClearBtn" class="clear-button">
-                    <span>Clear Badge via SW</span>
-                </button>
-                
-                <button id="checkSWBtn" class="badge-button">
-                    <span>Check SW Status</span>
-                </button>
+                <h2>🧪 Advanced Testing</h2>
+                <p>Test advanced PWA functionality - these work even when the app is closed!</p>
                 
                 <button id="reregisterSWBtn" class="clear-button">
                     <span>Re-register SW</span>
@@ -72,11 +56,7 @@
                     <span>Start Periodic Updates</span>
                 </button>
                 
-                <button id="simulatePushBtn" class="badge-button" style="background: #ff6b35;">
-                    <span>🚀 Simulate MSN Push (Microsoft Pattern)</span>
-                </button>
-                
-                <button id="independenceTestBtn" class="badge-button" style="background: #9c27b0;">
+                <button id="independenceTestBtn" class="badge-button">
                     <span>🧪 Test Browser Independence (30s delay)</span>
                 </button>
                 
@@ -90,16 +70,16 @@
                     <li>Click "Set Badge" to start the 10-second timer</li>
                     <li>The app badge will appear on your home screen icon</li>
                     <li>Use "Clear Badge" to remove it</li>
-                    <li><strong>Background Sync:</strong> Triggers badge updates even when closed</li>
+                    <li><strong>Advanced Testing:</strong> Test browser independence and periodic updates</li>
                     <li><strong>Service Worker:</strong> Persistent background operations</li>
                 </ul>
                 
-                <h4>🔄 Background Sync Notes:</h4>
+                <h4>🧪 Advanced Features:</h4>
                 <ul>
-                    <li><strong>Browser Mode:</strong> Background sync works more reliably</li>
-                    <li><strong>Installed PWA:</strong> More limited due to OS battery optimization</li>
-                    <li><strong>Testing:</strong> Try closing/reopening PWA or use background sync buttons</li>
-                    <li><strong>Persistence:</strong> Service worker uses multiple keep-alive strategies</li>
+                    <li><strong>Browser Independence:</strong> Service worker runs even when app is closed</li>
+                    <li><strong>Periodic Updates:</strong> Automatic badge updates at regular intervals</li>
+                    <li><strong>Service Worker Persistence:</strong> Background operations continue running</li>
+                    <li><strong>Badge API:</strong> Native desktop app badge notifications</li>
                 </ul>
             </div>
         </main>

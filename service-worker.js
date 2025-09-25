@@ -1,10 +1,16 @@
-const CACHE_NAME = 'test-pwa-v7'; // Updated version to force refresh
+const CACHE_NAME = 'test-pwa-v9'; // Updated with custom icons from AppImages
 const urlsToCache = [
     './',
     './index.html',
     './style.css',
     './app.js',
-    './manifest.json'
+    './manifest.json',
+    './AppImages/android/android-launchericon-48-48.png',
+    './AppImages/android/android-launchericon-72-72.png',
+    './AppImages/android/android-launchericon-96-96.png',
+    './AppImages/android/android-launchericon-144-144.png',
+    './AppImages/android/android-launchericon-192-192.png',
+    './AppImages/android/android-launchericon-512-512.png'
 ];
 
 // Install event - cache resources
@@ -134,8 +140,8 @@ async function handleBackgroundBadgeSync() {
             // Optionally show a notification
             await self.registration.showNotification('Badge Updated', {
                 body: `Badge count: ${badgeManager.badgeCount}`,
-                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
-                badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>',
+                icon: 'AppImages/android/android-launchericon-192-192.png',
+                badge: 'AppImages/android/android-launchericon-96-96.png',
                 tag: 'badge-update',
                 renotify: true,
                 data: {
@@ -186,8 +192,8 @@ self.addEventListener('push', (event) => {
     let notificationData = {
         title: 'MSN Play Style Notification',
         body: 'New game activity - Badge update via push',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
-        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>',
+        icon: 'AppImages/android/android-launchericon-192-192.png',
+        badge: 'AppImages/android/android-launchericon-96-96.png',
         tag: 'msn-play-badge-update',
         badgeCount: 1
     };
@@ -448,7 +454,7 @@ function startKeepAlive() {
                     if (isPWA && Notification.permission === 'granted') {
                         self.registration.showNotification('PWA Background Active', {
                             body: `Badge updated to ${badgeManager.badgeCount} (PWA mode)`,
-                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
+                            icon: 'AppImages/android/android-launchericon-192-192.png',
                             tag: 'pwa-background',
                             silent: true,
                             data: { source: 'pwa-background' }
@@ -512,8 +518,8 @@ async function handleKeepAliveSync() {
             if (Notification.permission === 'granted') {
                 await self.registration.showNotification('Background Active', {
                     body: 'Service Worker is running in background! Badge updated.',
-                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
-                    badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔄</text></svg>',
+                    icon: 'AppImages/android/android-launchericon-192-192.png',
+                    badge: 'AppImages/android/android-launchericon-96-96.png',
                     tag: 'keep-alive',
                     silent: true,
                     data: {
@@ -553,8 +559,8 @@ function startPeriodicBadgeUpdates() {
                 if (self.registration && Notification.permission === 'granted') {
                     await self.registration.showNotification('Background Badge Update', {
                         body: `Badge automatically updated to ${badgeManager.badgeCount}`,
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
-                        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔄</text></svg>',
+                        icon: 'AppImages/android/android-launchericon-192-192.png',
+                        badge: 'AppImages/android/android-launchericon-96-96.png',
                         tag: 'periodic-update',
                         silent: true,
                         requireInteraction: false,
@@ -578,25 +584,7 @@ self.addEventListener('message', (event) => {
     
     if (event.data && event.data.type) {
         switch (event.data.type) {
-            case 'SET_BADGE':
-                event.waitUntil(
-                    badgeManager.setBadge(event.data.count || 1)
-                );
-                break;
-                
-            case 'CLEAR_BADGE':
-                event.waitUntil(
-                    badgeManager.clearBadge().then(() => {
-                        badgeManager.resetCount(); // Reset internal counter
-                    })
-                );
-                break;
-                
-            case 'START_BACKGROUND_SYNC':
-                event.waitUntil(
-                    self.registration.sync.register('background-badge-sync')
-                );
-                break;
+
                 
             case 'START_PERIODIC_UPDATES':
                 startPeriodicBadgeUpdates();
@@ -624,20 +612,7 @@ self.addEventListener('message', (event) => {
                 }
                 break;
                 
-            case 'SIMULATE_PUSH':
-                // Microsoft Edge Team Pattern - Simulate external push
-                console.log('Service Worker: Simulating Microsoft-style push notification');
-                event.waitUntil(
-                    handlePushNotificationWithBadge({
-                        title: event.data.data.title || 'MSN Play Game',
-                        body: event.data.data.body || 'Game activity update',
-                        badgeCount: event.data.data.badgeCount || 1,
-                        tag: 'microsoft-push-simulation',
-                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🐱</text></svg>',
-                        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔴</text></svg>'
-                    })
-                );
-                break;
+
                 
             case 'SCHEDULE_INDEPENDENCE_TEST':
                 // Schedule delayed badge update to test browser independence
