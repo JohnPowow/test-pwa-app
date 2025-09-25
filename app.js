@@ -195,7 +195,7 @@ class PWAInstaller {
             installBanner.className = 'install-banner';
             installBanner.innerHTML = `
                 <div class="install-content">
-                    <span>📱 Install this PWA for the best experience!</span>
+                    <span>🐱 Install this PWA for the best experience!</span>
                     <button id="installBtn" class="install-btn">Install</button>
                     <button id="dismissBtn" class="dismiss-btn">✕</button>
                 </div>
