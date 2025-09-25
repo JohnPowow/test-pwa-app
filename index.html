@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PWA - App Badge Demo</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="A test PWA that demonstrates setAppBadge functionality">
+    <meta name="theme-color" content="#2196F3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Test PWA">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📱</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 Test PWA</h1>
+            <p>App Badge Demo</p>
+        </header>
+        
+        <main>
+            <div class="card">
+                <h2>Set App Badge</h2>
+                <p>Click the button below to set an app badge after a 30-second delay.</p>
+                
+                <button id="setBadgeBtn" class="badge-button">
+                    <span class="button-text">Set Badge (30s delay)</span>
+                    <span class="loading-indicator" id="loadingIndicator">⏳</span>
+                </button>
+                
+                <button id="clearBadgeBtn" class="clear-button">Clear Badge</button>
+                
+                <div class="status" id="status"></div>
+            </div>
+            
+            <div class="info-card">
+                <h3>ℹ️ How it works</h3>
+                <ul>
+                    <li>Install this PWA to your device</li>
+                    <li>Click "Set Badge" to start the 30-second timer</li>
+                    <li>The app badge will appear on your home screen icon</li>
+                    <li>Use "Clear Badge" to remove it</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
