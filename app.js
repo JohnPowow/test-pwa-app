@@ -5,6 +5,13 @@ class BadgeDemo {
         this.clearBadgeBtn = document.getElementById('clearBadgeBtn');
         this.status = document.getElementById('status');
         this.loadingIndicator = document.getElementById('loadingIndicator');
+        
+        // New background sync buttons
+        this.backgroundSyncBtn = document.getElementById('backgroundSyncBtn');
+        this.swBadgeBtn = document.getElementById('swBadgeBtn');
+        this.swClearBtn = document.getElementById('swClearBtn');
+        this.swStatus = document.getElementById('swStatus');
+        
         this.timeoutId = null;
         
         this.init();
@@ -17,6 +24,17 @@ class BadgeDemo {
         // Set up event listeners
         this.setBadgeBtn.addEventListener('click', () => this.startBadgeTimer());
         this.clearBadgeBtn.addEventListener('click', () => this.clearBadge());
+        
+        // Background sync event listeners
+        if (this.backgroundSyncBtn) {
+            this.backgroundSyncBtn.addEventListener('click', () => this.triggerBackgroundSync());
+        }
+        if (this.swBadgeBtn) {
+            this.swBadgeBtn.addEventListener('click', () => this.setBadgeViaSW());
+        }
+        if (this.swClearBtn) {
+            this.swClearBtn.addEventListener('click', () => this.clearBadgeViaSW());
+        }
         
         // Check for URL parameters (for shortcuts)
         this.checkURLParams();
@@ -155,6 +173,63 @@ class BadgeDemo {
             }, 5000);
         }
     }
+    
+    updateSWStatus(message, type = 'info') {
+        if (this.swStatus) {
+            this.swStatus.textContent = message;
+            this.swStatus.className = `status ${type}`;
+            
+            // Auto-clear status after 5 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    this.swStatus.textContent = '';
+                    this.swStatus.className = 'status';
+                }, 5000);
+            }
+        }
+    }
+    
+    async triggerBackgroundSync() {
+        try {
+            if (window.swManager) {
+                await window.swManager.triggerBackgroundSync();
+                this.updateSWStatus('🔄 Background sync triggered! Check your badge in a few seconds.', 'success');
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to trigger background sync:', error);
+            this.updateSWStatus('❌ Failed to trigger background sync', 'error');
+        }
+    }
+    
+    async setBadgeViaSW() {
+        try {
+            if (window.swManager) {
+                await window.swManager.setBadgeViaSW(1);
+                this.updateSWStatus('🐱 Badge set via service worker!', 'success');
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to set badge via SW:', error);
+            this.updateSWStatus('❌ Failed to set badge via service worker', 'error');
+        }
+    }
+    
+    async clearBadgeViaSW() {
+        try {
+            if (window.swManager) {
+                await window.swManager.clearBadgeViaSW();
+                this.updateSWStatus('🧹 Badge cleared via service worker!', 'success');
+            } else {
+                this.updateSWStatus('❌ Service worker manager not available', 'error');
+            }
+        } catch (error) {
+            console.error('Failed to clear badge via SW:', error);
+            this.updateSWStatus('❌ Failed to clear badge via service worker', 'error');
+        }
+    }
 }
 
 // PWA Installation handling
@@ -250,14 +325,108 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('App: Initialization complete');
 });
 
-// Register service worker
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', async () => {
-        try {
-            const registration = await navigator.serviceWorker.register('/service-worker.js');
-            console.log('SW registered: ', registration);
-        } catch (registrationError) {
-            console.log('SW registration failed: ', registrationError);
+// Enhanced Service Worker Registration and Background Sync
+class ServiceWorkerManager {
+    constructor() {
+        this.registration = null;
+        this.init();
+    }
+    
+    async init() {
+        if ('serviceWorker' in navigator) {
+            try {
+                // Register service worker
+                this.registration = await navigator.serviceWorker.register('/service-worker.js');
+                console.log('SW registered:', this.registration);
+                
+                // Set up message channel for communication
+                this.setupMessageChannel();
+                
+                // Request notification permission
+                await this.requestNotificationPermission();
+                
+                // Register background sync
+                await this.registerBackgroundSync();
+                
+                // Set up keep-alive mechanism
+                this.startKeepAlive();
+                
+            } catch (error) {
+                console.error('SW registration failed:', error);
+            }
         }
-    });
+    }
+    
+    setupMessageChannel() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('Message from SW:', event.data);
+            });
+        }
+    }
+    
+    async requestNotificationPermission() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            console.log('Notification permission:', permission);
+            return permission === 'granted';
+        }
+        return false;
+    }
+    
+    async registerBackgroundSync() {
+        if ('serviceWorker' in navigator && 'sync' in window) {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                if ('sync' in registration) {
+                    // Register background sync for badge updates
+                    await registration.sync.register('background-badge-sync');
+                    console.log('Background sync registered');
+                }
+            } catch (error) {
+                console.error('Background sync registration failed:', error);
+            }
+        }
+    }
+    
+    async sendMessageToSW(message) {
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage(message);
+        }
+    }
+    
+    async setBadgeViaSW(count = 1) {
+        await this.sendMessageToSW({
+            type: 'SET_BADGE',
+            count: count
+        });
+    }
+    
+    async clearBadgeViaSW() {
+        await this.sendMessageToSW({
+            type: 'CLEAR_BADGE'
+        });
+    }
+    
+    async triggerBackgroundSync() {
+        await this.sendMessageToSW({
+            type: 'START_BACKGROUND_SYNC'
+        });
+    }
+    
+    // Keep service worker alive
+    startKeepAlive() {
+        setInterval(async () => {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                const channel = new MessageChannel();
+                navigator.serviceWorker.controller.postMessage(
+                    { type: 'PING' }, 
+                    [channel.port2]
+                );
+            }
+        }, 25000); // Every 25 seconds
+    }
 }
+
+// Initialize service worker manager and make it globally available
+window.swManager = new ServiceWorkerManager();

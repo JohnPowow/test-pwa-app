@@ -44,6 +44,25 @@
                 <div class="status" id="status"></div>
             </div>
             
+            <div class="card">
+                <h2>🔄 Background Badge Testing</h2>
+                <p>Test background service worker functionality - these work even when the app is closed!</p>
+                
+                <button id="backgroundSyncBtn" class="badge-button">
+                    <span>Trigger Background Sync</span>
+                </button>
+                
+                <button id="swBadgeBtn" class="badge-button">
+                    <span>Set Badge via SW</span>
+                </button>
+                
+                <button id="swClearBtn" class="clear-button">
+                    <span>Clear Badge via SW</span>
+                </button>
+                
+                <div class="status" id="swStatus"></div>
+            </div>
+            
             <div class="info-card">
                 <h3>ℹ️ How it works</h3>
                 <ul>
@@ -51,6 +70,8 @@
                     <li>Click "Set Badge" to start the 10-second timer</li>
                     <li>The app badge will appear on your home screen icon</li>
                     <li>Use "Clear Badge" to remove it</li>
+                    <li><strong>Background Sync:</strong> Triggers badge updates even when closed</li>
+                    <li><strong>Service Worker:</strong> Persistent background operations</li>
                 </ul>
             </div>
         </main>
