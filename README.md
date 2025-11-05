@@ -1,27 +1,25 @@
-# 🐱 T- ✅ Full PWA functionality (installable, offline-capable)
-- 🔔 App Badge API demonstration with 10-second delay
-- 🎯 Modern, responsive design with cat emoji branding PWA - App Badge Demo
+# 🐱 Test PWA - App Badge Demo
 
-A Progressive Web App (PWA) that demonstrates the `setAppBadge` API functionality with a 10-second delay. Features a cute cat emoji theme!
+A Progressive Web App (PWA) that demonstrates the `setAppBadge` API functionality with a 3-second delay. Features a cute cat emoji theme!
 
 ## Features
 
 - ✅ Full PWA functionality (installable, offline-capable)
-- � App Badge API demonstration with 10-second delay
+- 🔔 App Badge API demonstration with 3-second delay
 - 🎯 Modern, responsive design with cat emoji branding
 - 🔄 Service worker for offline functionality
 - 📲 Install prompt for better user experience
-- ⚡ Quick 10-second timer for fast testing
+- ⚡ Quick 3-second timer for fast testing
 
 ## Live Demo
 
-Visit the GitHub Pages site: `https://johnpowers-microsoft.github.io/testpwa/`
+Visit the GitHub Pages site: `https://johnpowow.github.io/test-pwa-app/`
 
 ## How to Use
 
 1. **Install the PWA**: Visit the site and click "Install" when prompted
-2. **Set Badge**: Click "Set Badge (10s delay)" to start the timer
-3. **Wait**: The app badge will appear on your home screen icon after 10 seconds
+2. **Set Badge**: Click "Set Badge (3s delay)" to start the timer
+3. **Wait**: The app badge will appear on your home screen icon after 3 seconds
 4. **Clear Badge**: Use "Clear Badge" to remove the badge
 5. **App Shortcut**: Long press the installed PWA icon to access the direct "Set Badge" shortcut
 
@@ -51,7 +49,7 @@ The App Badge API is currently supported in:
 ## Technical Details
 
 ### App Badge API
-The PWA uses the `navigator.setAppBadge()` and `navigator.clearAppBadge()` APIs to manage the badge on the app icon. The badge is set to show the number "1" after a quick 10-second delay for easy testing.
+The PWA uses the `navigator.setAppBadge()` and `navigator.clearAppBadge()` APIs to manage the badge on the app icon. The badge is set to show the number "1" after a quick 3-second delay for easy testing.
 
 ### PWA Features
 - **Installable**: Includes proper manifest and service worker for home screen installation
@@ -94,5 +92,5 @@ To modify or enhance the PWA:
 
 ### Quick Customization:
 - Change emoji: Replace `🐱` with `🚀`, `⭐`, `💎`, etc.
-- Change timer: Modify `setTimeout(..., 10000)` and related UI text
+- Change timer: Modify `setTimeout(..., 3000)` and related UI text
 - Change colors: Update CSS custom properties and theme colors 

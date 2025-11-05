@@ -34,8 +34,6 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// NOTE: Enhanced activate event handler is at the bottom of the file
-
 // Fetch event - serve cached content when offline
 self.addEventListener('fetch', (event) => {
     console.log('Service Worker: Fetch event for', event.request.url);
@@ -358,9 +356,6 @@ self.addEventListener('activate', (event) => {
             // Start keep-alive mechanism
             startKeepAlive();
             
-            // Start periodic background badge updates to ensure persistence
-            startPeriodicBadgeUpdates();
-            
             // Notify clients that SW is ready
             return self.clients.matchAll().then(clients => {
                 clients.forEach(client => {
@@ -416,8 +411,8 @@ function logServiceWorkerState(context = 'general') {
 // Microsoft Independence Test - Log when we're truly browser-independent
 function logBrowserIndependence() {
     if (!hasActiveClients) {
-        console.log('🚀 MICROSOFT PATTERN ACTIVE: Service Worker running independently of browser windows!');
-        console.log('📊 This proves badge updates work without any UI open!');
+        console.log(' MICROSOFT PATTERN ACTIVE: Service Worker running independently of browser windows');
+        console.log(' This proves badge updates work without any UI open');
         return true;
     }
     return false;
@@ -537,64 +532,12 @@ async function handleKeepAliveSync() {
     }
 }
 
-// Periodic background badge updates to ensure SW persistence
-let periodicBadgeInterval;
-
-function startPeriodicBadgeUpdates() {
-    if (periodicBadgeInterval) {
-        clearInterval(periodicBadgeInterval);
-    }
-    
-    // Start periodic badge updates every 2 minutes
-    periodicBadgeInterval = setInterval(async () => {
-        console.log('Service Worker: Periodic badge update check');
-        
-        try {
-            const shouldUpdate = await checkForUpdates();
-            if (shouldUpdate) {
-                await badgeManager.incrementBadge();
-                console.log('Service Worker: Periodic badge updated to', badgeManager.badgeCount);
-                
-                // Show silent notification to prove background operation
-                if (self.registration && Notification.permission === 'granted') {
-                    await self.registration.showNotification('Background Badge Update', {
-                        body: `Badge automatically updated to ${badgeManager.badgeCount}`,
-                        icon: 'AppImages/android/android-launchericon-192-192.png',
-                        badge: 'AppImages/android/android-launchericon-96-96.png',
-                        tag: 'periodic-update',
-                        silent: true,
-                        requireInteraction: false,
-                        data: {
-                            action: 'periodic-update',
-                            count: badgeManager.badgeCount,
-                            timestamp: Date.now()
-                        }
-                    });
-                }
-            }
-        } catch (error) {
-            console.error('Service Worker: Periodic badge update failed:', error);
-        }
-    }, 120000); // Every 2 minutes
-}
-
 // Enhanced message handling for manual badge operations
 self.addEventListener('message', (event) => {
     console.log('Service Worker: Message received', event.data);
     
     if (event.data && event.data.type) {
         switch (event.data.type) {
-
-                
-            case 'START_PERIODIC_UPDATES':
-                startPeriodicBadgeUpdates();
-                break;
-                
-            case 'STOP_PERIODIC_UPDATES':
-                if (periodicBadgeInterval) {
-                    clearInterval(periodicBadgeInterval);
-                }
-                break;
                 
             case 'PING':
                 // Keep alive ping
@@ -640,7 +583,7 @@ self.addEventListener('message', (event) => {
                     }).catch(err => {
                         console.error('Independence test badge update failed:', err);
                     });
-                }, event.data.delay || 30000);
+                }, event.data.delay || 5000);
                 break;
         }
     }
