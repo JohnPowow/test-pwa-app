@@ -32,10 +32,10 @@
         <main>
             <div class="card">
                 <h2>Set App Badge</h2>
-                <p>Click the button below to set an app badge after a 10-second delay.</p>
+                <p>Click the button below to set an app badge after a 3-second delay.</p>
                 
                 <button id="setBadgeBtn" class="badge-button">
-                    <span class="button-text">Set Badge (10s delay)</span>
+                    <span class="button-text">Set Badge (3s delay)</span>
                     <span class="loading-indicator" id="loadingIndicator">⏳</span>
                 </button>
                 
@@ -66,20 +66,10 @@
             <div class="info-card">
                 <h3>ℹ️ How it works</h3>
                 <ul>
-                    <li>Install this PWA to your device</li>
-                    <li>Click "Set Badge" to start the 10-second timer</li>
-                    <li>The app badge will appear on your home screen icon</li>
+                    <li>Install this PWA and click "Set Badge" to start the timer</li>
+                    <li>The badge appears on your home screen icon after 3 seconds</li>
                     <li>Use "Clear Badge" to remove it</li>
-                    <li><strong>Advanced Testing:</strong> Test browser independence and periodic updates</li>
-                    <li><strong>Service Worker:</strong> Persistent background operations</li>
-                </ul>
-                
-                <h4>🧪 Advanced Features:</h4>
-                <ul>
-                    <li><strong>Browser Independence:</strong> Service worker runs even when app is closed</li>
-                    <li><strong>Periodic Updates:</strong> Automatic badge updates at regular intervals</li>
-                    <li><strong>Service Worker Persistence:</strong> Background operations continue running</li>
-                    <li><strong>Badge API:</strong> Native desktop app badge notifications</li>
+                    <li><strong>Browser Independence Test:</strong> Service worker runs even when app is closed (5s delay)</li>
                 </ul>
             </div>
         </main>

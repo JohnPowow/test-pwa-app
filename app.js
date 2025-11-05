@@ -6,9 +6,8 @@ class BadgeDemo {
         this.status = document.getElementById('status');
         this.loadingIndicator = document.getElementById('loadingIndicator');
         
-        // Remaining buttons
+        // Advanced testing buttons
         this.reregisterSWBtn = document.getElementById('reregisterSWBtn');
-        this.startPeriodicBtn = document.getElementById('startPeriodicBtn');
         this.swStatus = document.getElementById('swStatus');
         
         this.timeoutId = null;

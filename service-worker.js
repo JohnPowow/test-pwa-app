@@ -594,9 +594,6 @@ self.addEventListener('beforeunload', () => {
     if (keepAliveInterval) {
         clearInterval(keepAliveInterval);
     }
-    if (periodicBadgeInterval) {
-        clearInterval(periodicBadgeInterval);
-    }
 });
 
 // Listen for visibility changes to adjust behavior
