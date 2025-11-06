@@ -1,16 +1,11 @@
-const CACHE_NAME = 'test-pwa-v9'; // Updated with custom icons from AppImages
+const CACHE_NAME = 'test-pwa-v10'; // Updated with Windows 11 256x256 icons
 const urlsToCache = [
     './',
     './index.html',
     './style.css',
     './app.js',
     './manifest.json',
-    './AppImages/android/android-launchericon-48-48.png',
-    './AppImages/android/android-launchericon-72-72.png',
-    './AppImages/android/android-launchericon-96-96.png',
-    './AppImages/android/android-launchericon-144-144.png',
-    './AppImages/android/android-launchericon-192-192.png',
-    './AppImages/android/android-launchericon-512-512.png'
+    './AppImages/windows11/Square44x44Logo.targetsize-256.png'
 ];
 
 // Install event - cache resources
@@ -138,8 +133,8 @@ async function handleBackgroundBadgeSync() {
             // Optionally show a notification
             await self.registration.showNotification('Badge Updated', {
                 body: `Badge count: ${badgeManager.badgeCount}`,
-                icon: 'AppImages/android/android-launchericon-192-192.png',
-                badge: 'AppImages/android/android-launchericon-96-96.png',
+                icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
+                badge: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
                 tag: 'badge-update',
                 renotify: true,
                 data: {
@@ -166,8 +161,8 @@ self.addEventListener('push', (event) => {
     let notificationData = {
         title: 'MSN Play Style Notification',
         body: 'New game activity - Badge update via push',
-        icon: 'AppImages/android/android-launchericon-192-192.png',
-        badge: 'AppImages/android/android-launchericon-96-96.png',
+        icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
+        badge: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
         tag: 'msn-play-badge-update',
         badgeCount: 1
     };
@@ -241,8 +236,8 @@ async function handlePushNotification(data) {
         // Show notification
         await self.registration.showNotification(data.title, {
             body: data.body,
-            icon: data.icon,
-            badge: data.badge,
+            icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
+            badge: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
             tag: data.tag || 'push-notification',
             data: {
                 action: 'push-received',
@@ -411,7 +406,7 @@ function startKeepAlive() {
                     if (isPWA && Notification.permission === 'granted') {
                         self.registration.showNotification('PWA Background Active', {
                             body: `Badge updated to ${badgeManager.badgeCount} (PWA mode)`,
-                            icon: 'AppImages/android/android-launchericon-192-192.png',
+                            icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
                             tag: 'pwa-background',
                             silent: true,
                             data: { source: 'pwa-background' }
@@ -473,8 +468,8 @@ async function handleKeepAliveSync() {
             if (Notification.permission === 'granted') {
                 await self.registration.showNotification('Background Active', {
                     body: 'Service Worker is running in background! Badge updated.',
-                    icon: 'AppImages/android/android-launchericon-192-192.png',
-                    badge: 'AppImages/android/android-launchericon-96-96.png',
+                    icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
+                    badge: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
                     tag: 'keep-alive',
                     silent: true,
                     data: {
@@ -528,7 +523,8 @@ self.addEventListener('message', (event) => {
                         if (Notification.permission === 'granted') {
                             self.registration.showNotification('SW Badge Test Success! 🎉', {
                                 body: 'Service worker updated badge to 99 independently!',
-                                icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🧪</text></svg>',
+                                icon: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
+                                badge: 'AppImages/windows11/Square44x44Logo.targetsize-256.png',
                                 tag: 'sw-badge-test',
                                 requireInteraction: true,
                                 data: {

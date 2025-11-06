@@ -45,7 +45,7 @@ header p {
 .card, .info-card {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 16px;
-    padding: 30px;
+    padding: 20px;
     margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(173, 20, 87, 0.15);
     backdrop-filter: blur(10px);
@@ -54,12 +54,12 @@ header p {
 
 .card h2 {
     color: #c2185b;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     font-size: 1.5rem;
 }
 
 .card p {
-    margin-bottom: 25px;
+    margin-bottom: 18px;
     color: #666;
 }
 

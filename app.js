@@ -220,14 +220,14 @@ class BadgeDemo {
             if (window.swManager) {
                 await window.swManager.scheduleSwBadgeTest();
                 
-                this.updateSWStatus('🧪 Test started! Close ALL browser windows in 5 seconds. Badge will update to 99!', 'info');
+                this.updateSWStatus('🧪 Test started! Close PWA in 5 seconds. Badge will update to 99!', 'info');
                 
                 // Countdown timer
                 let countdown = 5;
                 const countdownInterval = setInterval(() => {
                     countdown--;
                     if (countdown > 0) {
-                        this.updateSWStatus(`🧪 Close browser in ${countdown} seconds. Badge will still update!`, 'info');
+                        this.updateSWStatus(`🧪 Close PWA in ${countdown} seconds. Badge will still update!`, 'info');
                     } else {
                         clearInterval(countdownInterval);
                         this.updateSWStatus('🧪 SW badge test active! Check your app icon badge!', 'success');
