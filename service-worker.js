@@ -15,15 +15,17 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME)
             .then((cache) => {
                 console.log('Service Worker: Caching files');
+                console.log('Service Worker: Files to cache:', urlsToCache);
                 return cache.addAll(urlsToCache);
             })
             .then(() => {
-                console.log('Service Worker: All files cached');
+                console.log('Service Worker: All files cached successfully');
                 // Force immediate activation
                 return self.skipWaiting();
             })
             .catch((error) => {
                 console.error('Service Worker: Cache failed', error);
+                console.error('Service Worker: Failed URLs:', urlsToCache);
                 throw error;
             })
     );
