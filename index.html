@@ -45,19 +45,15 @@
             </div>
             
             <div class="card">
-                <h2>🧪 Advanced Testing</h2>
-                <p>Test advanced PWA functionality - these work even when the app is closed!</p>
+                <h2>🔧 Service Worker Testing</h2>
+                <p>Test service worker functionality and keep-alive mechanisms.</p>
                 
                 <button id="reregisterSWBtn" class="clear-button">
                     <span>Re-register SW</span>
                 </button>
                 
-                <button id="startPeriodicBtn" class="badge-button">
-                    <span>Start Periodic Updates</span>
-                </button>
-                
-                <button id="independenceTestBtn" class="badge-button">
-                    <span>🧪 Test Browser Independence (30s delay)</span>
+                <button id="testSwBadgeBtn" class="badge-button">
+                    <span>Test SW Badge Update (5s delay)</span>
                 </button>
                 
                 <div class="status" id="swStatus"></div>
@@ -69,7 +65,7 @@
                     <li>Install this PWA and click "Set Badge" to start the timer</li>
                     <li>The badge appears on your home screen icon after 3 seconds</li>
                     <li>Use "Clear Badge" to remove it</li>
-                    <li><strong>Browser Independence Test:</strong> Service worker runs even when app is closed (5s delay)</li>
+                    <li><strong>SW Badge Test:</strong> Click test button, close browser within 5s, badge updates to prove SW works independently!</li>
                 </ul>
             </div>
         </main>

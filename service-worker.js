@@ -156,31 +156,7 @@ async function handleBackgroundBadgeSync() {
     }
 }
 
-// Periodic badge update handler
-async function handlePeriodicBadgeUpdate() {
-    console.log('Service Worker: Handling periodic badge update');
-    
-    try {
-        // Increment badge every time this runs
-        await badgeManager.incrementBadge();
-        
-        // Schedule next update (simulate periodic activity)
-        setTimeout(() => {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-                navigator.serviceWorker.ready.then(registration => {
-                    if ('sync' in window && registration.sync) {
-                        return registration.sync.register('periodic-badge-update');
-                    }
-                });
-            }
-        }, 30000); // Every 30 seconds when active
-        
-        return true;
-    } catch (error) {
-        console.error('Service Worker: Periodic badge update failed:', error);
-        return false;
-    }
-}
+
 
 // Handle push notifications for badge updates - Microsoft Edge Team Pattern
 self.addEventListener('push', (event) => {
@@ -215,12 +191,7 @@ self.addEventListener('push', (event) => {
 // Handle push notification - Microsoft Edge Team Implementation Pattern
 async function handlePushNotificationWithBadge(data) {
     try {
-        const isBrowserIndependent = logBrowserIndependence();
         console.log('Service Worker: Processing push notification (PWA may be closed)');
-        
-        if (isBrowserIndependent) {
-            console.log('🎯 CRITICAL TEST: Badge update happening with NO browser windows open!');
-        }
         
         // STEP 1: Update badge FIRST - this is the critical functionality Microsoft needs
         if (data.badgeCount !== undefined) {
@@ -403,20 +374,11 @@ function logServiceWorkerState(context = 'general') {
         timeSinceLastCheck: Date.now() - lastClientCheckTime,
         isAppClosed: isAppClosed(),
         badgeCount: badgeManager.badgeCount,
-        registrationScope: self.registration?.scope,
-        browserIndependence: !hasActiveClients ? 'TRUE - Running without browser windows!' : 'FALSE - Has active windows'
+        registrationScope: self.registration?.scope
     });
 }
 
-// Microsoft Independence Test - Log when we're truly browser-independent
-function logBrowserIndependence() {
-    if (!hasActiveClients) {
-        console.log(' MICROSOFT PATTERN ACTIVE: Service Worker running independently of browser windows');
-        console.log(' This proves badge updates work without any UI open');
-        return true;
-    }
-    return false;
-}
+
 
 // Keep service worker alive with enhanced persistence
 function startKeepAlive() {
@@ -490,8 +452,6 @@ self.addEventListener('sync', (event) => {
     
     if (event.tag === 'background-badge-sync') {
         event.waitUntil(handleBackgroundBadgeSync());
-    } else if (event.tag === 'periodic-badge-update') {
-        event.waitUntil(handlePeriodicBadgeUpdate());
     } else if (event.tag === 'keep-alive-sync') {
         event.waitUntil(handleKeepAliveSync());
     }
@@ -555,36 +515,33 @@ self.addEventListener('message', (event) => {
                 }
                 break;
                 
-
-                
-            case 'SCHEDULE_INDEPENDENCE_TEST':
-                // Schedule delayed badge update to test browser independence
-                console.log('Service Worker: Scheduling browser independence test');
+            case 'SCHEDULE_SW_BADGE_TEST':
+                // Schedule delayed badge update to test SW works when browser is closed
+                console.log('Service Worker: Scheduling SW badge test');
                 setTimeout(() => {
-                    const isBrowserIndependent = logBrowserIndependence();
-                    console.log('🧪 BROWSER INDEPENDENCE TEST EXECUTING!');
+                    console.log('🧪 SW BADGE TEST EXECUTING!');
                     
                     badgeManager.setBadge(99).then(() => {
-                        console.log('✅ PROOF: Badge updated to 99 without any browser windows!');
+                        console.log('✅ SUCCESS: Badge updated to 99 by service worker!');
                         
-                        // Show notification to prove independence
+                        // Show notification to prove SW worked
                         if (Notification.permission === 'granted') {
-                            self.registration.showNotification('Browser Independence Proven! 🎉', {
-                                body: `Badge updated to 99 ${isBrowserIndependent ? 'WITHOUT' : 'WITH'} browser windows open`,
+                            self.registration.showNotification('SW Badge Test Success! 🎉', {
+                                body: 'Service worker updated badge to 99 independently!',
                                 icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🧪</text></svg>',
-                                tag: 'independence-test',
+                                tag: 'sw-badge-test',
                                 requireInteraction: true,
                                 data: {
-                                    browserIndependent: isBrowserIndependent,
                                     testTimestamp: Date.now()
                                 }
-                            }).catch(err => console.log('Independence notification failed:', err));
+                            }).catch(err => console.log('Test notification failed:', err));
                         }
                     }).catch(err => {
-                        console.error('Independence test badge update failed:', err);
+                        console.error('SW badge test failed:', err);
                     });
                 }, event.data.delay || 5000);
                 break;
+
         }
     }
 });

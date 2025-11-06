@@ -6,8 +6,9 @@ class BadgeDemo {
         this.status = document.getElementById('status');
         this.loadingIndicator = document.getElementById('loadingIndicator');
         
-        // Advanced testing buttons
+        // Service worker testing buttons
         this.reregisterSWBtn = document.getElementById('reregisterSWBtn');
+        this.testSwBadgeBtn = document.getElementById('testSwBadgeBtn');
         this.swStatus = document.getElementById('swStatus');
         
         this.timeoutId = null;
@@ -23,18 +24,12 @@ class BadgeDemo {
         this.setBadgeBtn.addEventListener('click', () => this.startBadgeTimer());
         this.clearBadgeBtn.addEventListener('click', () => this.clearBadge());
         
-        // Remaining event listeners
+        // Service worker testing event listeners
         if (this.reregisterSWBtn) {
             this.reregisterSWBtn.addEventListener('click', () => this.reregisterSW());
         }
-        if (this.startPeriodicBtn) {
-            this.startPeriodicBtn.addEventListener('click', () => this.startPeriodicFromUI());
-        }
-        
-        // Add browser independence test
-        const independenceTestBtn = document.getElementById('independenceTestBtn');
-        if (independenceTestBtn) {
-            independenceTestBtn.addEventListener('click', () => this.testBrowserIndependence());
+        if (this.testSwBadgeBtn) {
+            this.testSwBadgeBtn.addEventListener('click', () => this.testSwBadgeUpdate());
         }
         
         // Check for URL parameters (for shortcuts)
@@ -220,31 +215,30 @@ class BadgeDemo {
         }
     }
     
-    async testBrowserIndependence() {
+    async testSwBadgeUpdate() {
         try {
             if (window.swManager) {
-                // Schedule a delayed badge update to test browser independence
-                await window.swManager.scheduleBrowserIndependenceTest();
+                await window.swManager.scheduleSwBadgeTest();
                 
-                this.updateSWStatus('🧪 Independence test started! Close ALL browser windows in 5 seconds. Badge will update to prove independence!', 'info');
+                this.updateSWStatus('🧪 Test started! Close ALL browser windows in 5 seconds. Badge will update to 99!', 'info');
                 
-                // Countdown timer for user guidance
+                // Countdown timer
                 let countdown = 5;
                 const countdownInterval = setInterval(() => {
                     countdown--;
                     if (countdown > 0) {
-                        this.updateSWStatus(`🧪 Independence test: Close browser in ${countdown} seconds. Badge will still update!`, 'info');
+                        this.updateSWStatus(`🧪 Close browser in ${countdown} seconds. Badge will still update!`, 'info');
                     } else {
                         clearInterval(countdownInterval);
-                        this.updateSWStatus('🧪 Browser independence test active! Badge should update even if browser is closed!', 'success');
+                        this.updateSWStatus('🧪 SW badge test active! Check your app icon badge!', 'success');
                     }
                 }, 1000);
             } else {
                 this.updateSWStatus('❌ Service worker manager not available', 'error');
             }
         } catch (error) {
-            console.error('Failed to start independence test:', error);
-            this.updateSWStatus('❌ Failed to start browser independence test', 'error');
+            console.error('Failed to start SW badge test:', error);
+            this.updateSWStatus('❌ Failed to start SW badge test', 'error');
         }
     }
 }
@@ -525,23 +519,21 @@ class ServiceWorkerManager {
         }, 25000); // Every 25 seconds
     }
     
-
-    
-    // Test browser independence by scheduling delayed badge update
-    async scheduleBrowserIndependenceTest() {
+    // Schedule service worker badge test (works even when browser is closed)
+    async scheduleSwBadgeTest() {
         if (!this.registration) {
             throw new Error('Service worker not registered');
         }
         
-        console.log('Scheduling browser independence test - badge will update in 5 seconds');
+        console.log('Scheduling SW badge test - badge will update in 5 seconds');
         
         if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
-                type: 'SCHEDULE_INDEPENDENCE_TEST',
-                delay: 5000 // 5 seconds
+                type: 'SCHEDULE_SW_BADGE_TEST',
+                delay: 5000
             });
             
-            console.log('✅ Independence test scheduled - service worker will update badge in 5s regardless of browser state!');
+            console.log('✅ SW badge test scheduled - will update badge to 99 in 5s regardless of browser state!');
             return true;
         } else {
             throw new Error('No active service worker controller');
